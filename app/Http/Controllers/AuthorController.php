@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\File;
 use App\Models\Post;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 class AuthorController extends Controller
 {
@@ -121,6 +122,19 @@ class AuthorController extends Controller
             $new_filename = time().'_'. $filenam;
 
             $upload = Storage::disk('public')->put($path.$new_filename, (string) file_get_contents($file));
+
+            $post_thumbnail_path = $path.'thumbnails';
+            if (!Storage::disk('public')->exists($post_thumbnail_path)) {
+                Storage::disk('public')->makeDirectory($post_thumbnail_path, 0755, true, true);
+            }
+
+            Image::read(storage_path('app/public/'.$path.$new_filename))
+                    ->resizeDown(200, 200)
+                    ->save(storage_path('app/public/'.$path.'thumbnails/'.'thumb_'.$new_filename));
+
+            Image::read(storage_path('app/public/'.$path.$new_filename))
+                    ->resize(500, 350)
+                    ->save(storage_path('app/public/'.$path.'thumbnails/'.'resized'.$new_filename));
 
             if ($upload) {
                 $post = new Post();

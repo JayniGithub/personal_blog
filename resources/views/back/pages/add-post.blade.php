@@ -34,7 +34,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Post Content</label>
-                            <textarea required class="form-control" name="post_content" rows="6" placeholder="Post Content.."></textarea>
+                            <textarea class="ckeditor form-control" name="post_content" id="editor" rows="6" placeholder="Post Content.."></textarea>
                             <span class="text-danger error-text post_content_error"></span>
                         </div>
                     </div>
@@ -67,40 +67,50 @@
 @endsection
 
 @push('scripts')
-
+<script src="/ckeditor/ckeditor.js"></script>
 <script>
-  jQuery(document).ready(function($) {
-    $('#featured_image').change(function(event) {
-      var url = URL.createObjectURL(event.target.files[0]);
-      $('#img-previewer').attr("src", url);
-      console.log(event);
-    });
+    let editorinstance;
+    
+    
+    jQuery(document).ready(function($) {
+        var myEditor = ClassicEditor.create(document.querySelector('#editor'))
+                                    .then(editor => {editorinstance =editor;})
+                                    .catch(e => {console.error(e)});
 
-    $('#addNewPostForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = this;
-        var formData = new FormData(form);
-        $.ajax({
-            url: $(form).attr('action'),
-            method: $(form).attr('method'),
-            data: new FormData(form),
-            processData: false,
-            dataType: 'json',
-            contentType: false,
-            beforeSend: function(){
-                $(form).find('span.error-text').text('');
-            },
-            success: function(data){
-                this.reset();
-                // window.location.reload();
-            },
-            error:function() {
-                // $.each(response.responseJSON.errors, function(prefix, val){
-                //     $(form).find('span.'+prefix+ '_error').text(val[0]);
-                // });
-            }
+        $('#featured_image').change(function(event) {
+        var url = URL.createObjectURL(event.target.files[0]);
+        $('#img-previewer').attr("src", url);
+        console.log(event);
         });
-    });
+
+        $('#addNewPostForm').on('submit', function(e) {
+            e.preventDefault();
+            var form = this;
+            const postContent = editorinstance.getData();
+            var formData = new FormData(form);
+            formData.append('post_content', postContent)
+            $.ajax({
+                url: $(form).attr('action'),
+                method: $(form).attr('method'),
+                data: new FormData(form),
+                processData: false,
+                dataType: 'json',
+                contentType: false,
+                beforeSend: function(){
+                    $(form).find('span.error-text').text('');
+                },
+                success: function(data){
+                    this.reset();
+                    // document.querySelector('#editor').setData('');
+                    // window.location.reload();
+                },
+                error:function() {
+                    // $.each(response.responseJSON.errors, function(prefix, val){
+                    //     $(form).find('span.'+prefix+ '_error').text(val[0]);
+                    // });
+                }
+            });
+        });
   });
 </script>
     
